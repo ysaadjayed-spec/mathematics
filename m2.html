@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المسابقة التفاعلية للرياضيات - مدى البيانات</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Tajawal Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        tajawal: ['Tajawal', 'sans-serif'],
+                    },
+                    colors: {
+                        math: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #022c22 100%);
+            min-height: 100vh;
+        }
+
+        /* Animated Math Floating Symbols */
+        .math-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+            opacity: 0.08;
+        }
+
+        .floating-symbol {
+            position: absolute;
+            color: #ffffff;
+            font-weight: bold;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-10vh) rotate(360deg); }
+        }
+
+        /* Print media query styling */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-certificate, #printable-certificate * {
+                visibility: visible;
+            }
+            #printable-certificate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 20px;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .option-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.3);
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden">
+
+    <div class="math-bg" id="mathBg"></div>
+
+    <main class="container mx-auto px-4 py-8 flex-grow flex items-center justify-center relative z-10">
+        <div class="w-full max-w-2xl">
+
+            <!-- Welcome Screen -->
+            <div id="screen-welcome" class="glass-card rounded-3xl p-8 md:p-12 shadow-2xl text-center transition-all duration-500">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-emerald-100 text-emerald-600 mb-6 shadow-inner">
+                    <i class="fa-solid fa-chart-line text-4xl"></i>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3">مسابقة الرياضيات التفاعلية</h1>
+                <p class="text-slate-600 mb-2 text-lg font-medium">مفهوم مدى البيانات</p>
+                <p class="text-slate-500 mb-8 text-sm">أهلاً بكِ يا بطلة الرياضيات! يرجى كتابة اسمكِ للبدء في التحدي</p>
+                
+                <form id="start-form" onsubmit="startQuiz(event)" class="space-y-6">
+                    <div class="relative text-right">
+                        <label for="student-name" class="block text-sm font-bold text-slate-700 mb-2">اسم الطالبة:</label>
+                        <div class="relative">
+                            <input type="text" id="student-name" required placeholder="أدخلي اسمكِ الثلاثي أو الرباعي..." 
+                                   class="w-full px-5 py-4 rounded-xl border-2 border-slate-200 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 outline-none transition-all text-lg font-medium pr-12">
+                            <i class="fa-solid fa-user-graduate absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" 
+                            class="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold text-xl rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                        ابدئي المسابقة <i class="fa-solid fa-arrow-left mr-2"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="screen-quiz" class="glass-card rounded-3xl p-6 md:p-10 shadow-2xl hidden transition-all duration-500">
+                <div class="flex justify-between items-center mb-8 pb-4 border-b border-slate-200">
+                    <div>
+                        <span class="text-xs text-slate-500 block font-medium">الطالبة المبدعة</span>
+                        <span id="display-student-name" class="font-bold text-emerald-700 text-lg"></span>
+                    </div>
+                    <div class="bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100">
+                        <span class="text-xs text-emerald-600 block font-medium">السؤال</span>
+                        <span id="question-number" class="font-extrabold text-emerald-700 text-lg">1 من 1</span>
+                    </div>
+                </div>
+
+                <div class="w-full bg-slate-100 h-3 rounded-full mb-8 overflow-hidden">
+                    <div id="progress-bar" class="bg-emerald-600 h-full w-full transition-all duration-500 rounded-full"></div>
+                </div>
+
+                <div class="mb-8">
+                    <div class="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-md mb-3">الإحصاء والتحليل</div>
+                    <h2 id="question-text" class="text-2xl md:text-3xl font-extrabold text-slate-900 leading-snug"></h2>
+                </div>
+
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"></div>
+
+                <div id="feedback-banner" class="hidden p-4 rounded-xl mb-6 text-center font-bold text-lg"></div>
+
+                <button id="next-btn" onclick="nextQuestion()" disabled
+                        class="w-full py-4 bg-slate-300 text-slate-500 font-bold text-xl rounded-xl transition-all flex items-center justify-center gap-2 cursor-not-allowed">
+                    عرض الشهادة والنتيجة <i class="fa-solid fa-arrow-left"></i>
+                </button>
+            </div>
+
+            <!-- Certificate Screen -->
+            <div id="screen-certificate" class="hidden transition-all duration-500">
+                <div id="printable-certificate" class="glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden bg-white text-slate-800 border-8 border-emerald-600 my-4">
+                    <div class="absolute -right-16 -top-16 w-48 h-48 bg-emerald-100 rounded-full opacity-50 pointer-events-none"></div>
+                    <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-gold-100 rounded-full opacity-50 pointer-events-none"></div>
+
+                    <div class="border-2 border-gold-500 p-6 md:p-8 rounded-2xl relative z-10 text-center">
+                        
+                        <!-- Top Award Icon Header -->
+                        <div class="flex justify-center items-center mb-6">
+                            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-tr from-gold-400 via-yellow-300 to-gold-500 flex items-center justify-center shadow-xl ring-4 ring-gold-100">
+                                <i class="fa-solid fa-award text-4xl md:text-5xl text-emerald-900"></i>
+                            </div>
+                        </div>
+
+                        <!-- Certificate Title -->
+                        <h2 class="text-3xl md:text-5xl font-black text-emerald-800 tracking-wide mb-2">شهادة تفوق وإنجاز</h2>
+                        <div class="w-32 h-1 bg-gradient-to-r from-emerald-500 via-gold-500 to-emerald-500 mx-auto mb-6"></div>
+
+                        <!-- Certificate Body Content -->
+                        <p class="text-lg md:text-xl text-slate-700 mb-3">تمنح هذه الشهادة للطالبة المبدعة:</p>
+                        <h3 id="cert-student-name" class="text-2xl md:text-4xl font-black text-emerald-600 mb-4 border-b-2 border-dashed border-emerald-200 inline-block px-8 py-2"></h3>
+                        
+                        <p class="text-base md:text-lg text-slate-700 leading-relaxed max-w-xl mx-auto mb-6">
+                            نظير تفوقها واجتيازها بنجاح مسابقة الرياضيات التفاعلية بنتيجة:
+                            <span id="cert-score" class="font-extrabold text-2xl text-emerald-600 inline-block mx-1"></span>
+                        </p>
+
+                        <!-- Teacher Info -->
+                        <div class="mt-8 pt-6 border-t border-slate-200">
+                            <p class="text-slate-500 text-sm mb-1">معلمة الرياضيات:</p>
+                            <p class="font-extrabold text-emerald-800 text-xl md:text-2xl">العنود الغامدي</p>
+                        </div>
+
+                        <!-- Digital Skills Teacher Love Note -->
+                        <div class="mt-8 text-sm md:text-base font-semibold text-slate-600 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-heart text-red-500"></i>
+                            <span>صنع بحب من معلمة المهارات الرقمية حنين المطيري</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print & Restart Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 mt-6 no-print">
+                    <button onclick="window.print()" 
+                            class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-print"></i> طباعة / حفظ الشهادة
+                    </button>
+                    <button onclick="restartQuiz()" 
+                            class="flex-1 py-4 bg-slate-700 hover:bg-slate-800 text-white font-bold text-lg rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> إعادة المسابقة
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center text-slate-300 text-sm relative z-10 no-print border-t border-slate-800/50 bg-slate-900/40 backdrop-blur-sm">
+        <p class="font-medium">
+            معلمة المهارات الرقمية: <span class="text-emerald-300 font-bold">حنين المطيري</span>
+        </p>
+    </footer>
+
+    <script>
+        // Quiz Questions Data
+        const questions = [
+            {
+                id: 1,
+                question: "مدى البيانات التالية : ٩٠ - ٢٠ - ٧٠ - ١٠٠ - ٦٠ هو ؟",
+                options: [
+                    { label: "أ", text: "٦٠", correct: false },
+                    { label: "ب", text: "٧٠", correct: false },
+                    { label: "ج", text: "٨٠", correct: true },
+                    { label: "د", text: "٩٠", correct: false }
+                ],
+                explanation: "المدى = أكبر قيمة - أصغر قيمة = ١٠٠ - ٢٠ = ٨٠."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let studentName = "";
+        let selectedOptionIndex = null;
+
+        // Background floating elements initializer
+        window.onload = function() {
+            const bgContainer = document.getElementById('mathBg');
+            const symbols = ['٩٠', '٢٠', '٧٠', '١٠٠', '٦٠', '٨٠', '−', '=', 'المدى', '+', '×', '÷'];
+            
+            for (let i = 0; i < 30; i++) {
+                const el = document.createElement('div');
+                el.className = 'floating-symbol';
+                el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                el.style.left = `${Math.random() * 100}%`;
+                el.style.fontSize = `${Math.random() * 24 + 16}px`;
+                el.style.animationDuration = `${Math.random() * 15 + 10}s`;
+                el.style.animationDelay = `${Math.random() * 5}s`;
+                bgContainer.appendChild(el);
+            }
+        };
+
+        // Start Quiz Logic
+        function startQuiz(e) {
+            e.preventDefault();
+            const input = document.getElementById('student-name');
+            studentName = input.value.trim();
+            
+            if (!studentName) return;
+
+            document.getElementById('display-student-name').textContent = studentName;
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        // Render current question
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            selectedOptionIndex = null;
+
+            document.getElementById('question-number').textContent = `${currentQuestionIndex + 1} من ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `100%`;
+            document.getElementById('question-text').textContent = q.question;
+
+            const feedback = document.getElementById('feedback-banner');
+            feedback.className = "hidden p-4 rounded-xl mb-6 text-center font-bold text-lg";
+            feedback.textContent = "";
+
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = true;
+            nextBtn.className = "w-full py-4 bg-slate-300 text-slate-500 font-bold text-xl rounded-xl transition-all flex items-center justify-center gap-2 cursor-not-allowed";
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => selectOption(index);
+                btn.className = `option-btn w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-500 text-right flex items-center justify-between font-bold text-lg text-slate-700`;
+                btn.id = `option-${index}`;
+                
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-base font-extrabold shadow-inner">${opt.label}</span>
+                        <span>${opt.text}</span>
+                    </div>
+                    <i class="fa-regular fa-circle text-slate-300 text-xl status-icon"></i>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Option evaluation
+        function selectOption(index) {
+            if (selectedOptionIndex !== null) return;
+            selectedOptionIndex = index;
+
+            const q = questions[currentQuestionIndex];
+            const isCorrect = q.options[index].correct;
+
+            if (isCorrect) score++;
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.getElementById(`option-${idx}`);
+                btn.disabled = true;
+
+                if (opt.correct) {
+                    btn.className = "option-btn w-full p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold text-lg flex items-center justify-between";
+                    btn.querySelector('.status-icon').className = "fa-solid fa-circle-check text-emerald-600 text-2xl";
+                } else if (idx === index && !isCorrect) {
+                    btn.className = "option-btn w-full p-4 rounded-2xl border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold text-lg flex items-center justify-between";
+                    btn.querySelector('.status-icon').className = "fa-solid fa-circle-xmark text-rose-600 text-2xl";
+                } else {
+                    btn.className = "option-btn w-full p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-lg flex items-center justify-between opacity-60";
+                }
+            });
+
+            const feedback = document.getElementById('feedback-banner');
+            feedback.classList.remove('hidden');
+            if (isCorrect) {
+                feedback.classList.add('bg-emerald-100', 'text-emerald-800', 'border', 'border-emerald-300');
+                feedback.innerHTML = `<i class="fa-solid fa-face-smile text-2xl ml-2"></i> أحسنتِ يا بطلة! إجابة صحيحة. (${q.explanation})`;
+            } else {
+                feedback.classList.add('bg-rose-100', 'text-rose-800', 'border', 'border-rose-300');
+                feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation text-2xl ml-2"></i> إجابة خاطئة! ${q.explanation}`;
+            }
+
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = false;
+            nextBtn.className = "w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold text-xl rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer";
+        }
+
+        // Advance to next step
+        function nextQuestion() {
+            showCertificate();
+        }
+
+        // Render certificate
+        function showCertificate() {
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-certificate').classList.remove('hidden');
+
+            document.getElementById('cert-student-name').textContent = studentName;
+            document.getElementById('cert-score').textContent = `${score} من ${questions.length}`;
+
+            if (score === questions.length) {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        // Restart application
+        function restartQuiz() {
+            document.getElementById('screen-certificate').classList.add('hidden');
+            document.getElementById('screen-welcome').classList.remove('hidden');
+            document.getElementById('student-name').value = '';
+        }
+    </script>
+</body>
+</html>
